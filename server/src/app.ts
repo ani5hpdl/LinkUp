@@ -8,7 +8,8 @@ import compression from "compression";
 
 import { logger } from "./utils/logger.js";
 import { requestId } from "./middleware/requestId.js";
-import { notFound } from "./middleware/notFound.js";
+import router from "./routes/index.js";
+// import { notFound } from "./middleware/notFound.js";
 // import { errorHandler } from "./middleware/errorHandler.js";
 // import routes from "./routes/index.js";
 
@@ -67,10 +68,10 @@ app.get("/health", (_req, res) => {
 });
 
 //-----Api Routes--------------------------
-// app.use("/api/v1", routes);
+app.use("/api/v1",router);
 
 //-----404 + error handling----------------
-app.use(notFound);
+// app.use(notFound);
 // app.use(errorHandler);
 
 export default app;
