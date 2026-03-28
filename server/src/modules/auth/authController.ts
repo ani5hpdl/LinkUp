@@ -1,9 +1,8 @@
 import type { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { prisma } from "../../config/db";
-import { success } from "zod";
-import { tr } from "zod/locales";
 import { logger } from "../../utils/logger";
+import { success } from "zod";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -50,6 +49,47 @@ export const register = async (req: Request, res: Response) => {
       success: true,
       message: "New User Created Sucessfully.",
       data: newUser,
+    });
+  } catch (error) {
+    logger.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const login = async (req: Request, res: Response) => {
+  try {
+    const {email,password} = req.body;
+
+    const fetchUser = await prisma.user.findUnique({
+        where: {
+            email : email
+        }
+    });
+
+    if(!fetchUser){
+        return res.status(404).json({
+            success: false,
+            message: "Invalid Credentials."
+        });
+    }
+
+    const isValidUser = await bcrypt.compare(password,fetchUser.password);
+
+    if(!isValidUser){
+        return res.status(404).json({
+            success: false,
+            message: "Invalid Credentials"
+        });
+    }
+
+    logger.info("User Logged In.");
+
+    return res.status(200).json({
+        success: false,
+        message: "Login Sucessfully"
     });
   } catch (error) {
     logger.error(error);
