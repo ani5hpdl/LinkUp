@@ -11,6 +11,6 @@ export const setCookie = (res : Response, accessToken : string, refreshToken : s
         httpOnly: true,
         sameSite: "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: "/auth/refresh"
+        path: "/api/v1/auth/refresh"
     });
 }
