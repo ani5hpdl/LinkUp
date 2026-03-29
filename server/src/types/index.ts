@@ -10,18 +10,6 @@ export interface IUser{
     updated_at : Date
 }
 
-export interface RegisterBody{
-    username: string,
-    email: string,
-    password: string,
-    display_name: string;
-}
-
-export interface LoginBody{
-    email: string,
-    password: string
-}
-
 export interface ApiResponse{
     success : boolean;
     message: string,

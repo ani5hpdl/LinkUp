@@ -35,5 +35,21 @@ export const loginSchema = z.object({
     .max(255, { message: 'Password cannot be longer than 255 characters' })
 });
 
+export const updateMeSchema = z.object({
+  display_name: z.string()
+    .min(1,{message : "Display Name must be more than 1 letter."})
+    .max(60, { message: 'Display name cannot be longer than 60 characters' })
+    .optional(),
+
+  bio: z.string()
+    .min(1,{message : "Bio must be more than 1 letter."})
+    .max(225, { message: 'Bio cannot be longer than 225 characters' })
+    .optional(),
+
+  avatar_url: z.string()
+    .optional()
+});
+
 export type RegisterData = z.infer<typeof registerSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
+export type UpdateMeData = z.infer<typeof updateMeSchema>;

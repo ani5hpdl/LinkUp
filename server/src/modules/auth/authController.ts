@@ -5,12 +5,12 @@ import { prisma } from "../../config/db";
 import { logger } from "../../utils/logger";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt";
 import { setCookie } from "../../middleware/setCookie";
-import type { ApiResponse, IUser, LoginBody, RegisterBody } from "../../types";
-import { success } from "zod";
-import { fa } from "zod/locales";
+import type { ApiResponse, IUser } from "../../types";
+import type { AuthRequest } from "../../middleware/authenticate";
+import type { LoginData, RegisterData, UpdateMeData } from "./authValidator";
 
 export const register = async (
-  req: Request<{}, {}, RegisterBody>,
+  req: Request<{}, {}, RegisterData>,
   res: Response,
 ): Promise<Response<ApiResponse>> => {
   try {
@@ -72,7 +72,7 @@ export const register = async (
 };
 
 export const login = async (
-  req: Request<{}, {}, LoginBody>,
+  req: Request<{}, {}, LoginData>,
   res: Response,
 ): Promise<Response<ApiResponse>> => {
   try {
@@ -160,7 +160,7 @@ export const refresh = async (
 
     const decoded = jwt.verify(token, secret) as IUser;
     const user = await prisma.user.findUnique({
-      where: {id: decoded.id}
+      where: { id: decoded.id },
     });
 
     if (!user) {
@@ -172,11 +172,100 @@ export const refresh = async (
 
     const newAccessToken = generateAccessToken(user);
 
-    setCookie(res,newAccessToken,token);
+    setCookie(res, newAccessToken, token);
 
     return res.status(200).json({
       success: true,
       message: "Token Refreshed by refresh Token!!",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error" + error,
+    });
+  }
+};
+
+export const getMe = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "User not authenticated",
+    });
+  }
+
+  try {
+    const fetchUser = await prisma.user.findUnique({
+      where: {
+        email: req.user.email,
+      },
+    });
+
+    if (!fetchUser) {
+      return res.status(200).json({
+        success: false,
+        message: "User Not Found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User Fetched",
+      data: fetchUser,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server Error" + error,
+    });
+  }
+};
+
+export const updateMe = async (
+  req: AuthRequest & { body: UpdateMeData },
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  if (!req.body) {
+    return res.status(401).json({
+      success: false,
+      message: "Nothing to change.",
+    });
+  }
+
+  const { display_name, bio, avatar_url } = req.body;
+
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      message: "User not authenticated",
+    });
+  }
+
+  try {
+    const dataToUpdate: {
+      display_name?: string;
+      bio?: string;
+      avatar_url?: string;
+    } = {};
+
+    if (display_name !== undefined) dataToUpdate.display_name = display_name;
+    if (bio !== undefined) dataToUpdate.bio = bio;
+    if (avatar_url !== undefined) dataToUpdate.avatar_url = avatar_url;
+
+    const updateUser = await prisma.user.update({
+      where: {
+        email: req.user.email,
+      },
+      data: dataToUpdate,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "User Updated Sucessfully.",
+      data: updateUser,
     });
   } catch (error) {
     return res.status(500).json({

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 import type { IUser } from "../types";
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: IUser;
 }
 
