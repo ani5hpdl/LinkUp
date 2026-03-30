@@ -3,6 +3,7 @@ import type { Response, Request } from "express";
 import { prisma } from "../../config/db";
 import type { AuthRequest } from "../../middleware/authenticate";
 import type { PostData, UpdatePostData } from "./postValidator";
+import { success } from "zod";
 
 export const createPost = async (
   req: AuthRequest & { body: PostData },
@@ -104,7 +105,7 @@ export const deletePost = async (
     const fetchPost = await prisma.post.findUnique({
       where: {
         id: postId,
-        userId: req.user!.id
+        userId: req.user!.id,
       },
     });
 
@@ -118,9 +119,9 @@ export const deletePost = async (
     await prisma.post.delete({
       where: {
         id: postId,
-        userId: req.user!.id
-      }
-    })
+        userId: req.user!.id,
+      },
+    });
 
     return res.status(200).json({
       success: true,
@@ -205,4 +206,94 @@ export const getPostById = async (
       message: "Internal Server Error.",
     });
   }
+};
+
+export const toogleLike = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  const { postId } = req.params as { postId: string };
+  const userId = req.user!.email;
+
+  const fetchPost = await prisma.post.findUnique({
+    where: { id: postId },
+  });
+  if (!fetchPost) {
+    return res.status(404).json({
+      success: false,
+      message: "Post Not Found.",
+    });
+  }
+
+  const existing = await prisma.like.findUnique({
+    where: {
+      userId_postId: { userId, postId },
+    },
+  });
+
+  if (existing) {
+    const [,updatedLike] = await prisma.$transaction([
+      prisma.like.delete({
+        where: {
+          userId_postId: { userId, postId },
+        },
+      }),
+      prisma.post.update({
+        where: { id: postId },
+        data: {
+          likeCount: { decrement: 1 },
+        },
+        select: {
+          likeCount: true
+        }
+      }),
+    ]);
+
+    await prisma.notification.deleteMany({
+      where: {
+        senderId: userId,
+        recipientId: fetchPost.userId,
+        type: "like",
+        postId,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Unliked Post sucessfully.",
+      data : updatedLike
+    });
+  }
+
+  const [,updatedLike]= await prisma.$transaction([
+    prisma.like.create({
+      data: {
+        userId,
+        postId,
+      },
+    }),
+    prisma.post.update({
+      where: {id: postId},
+      data: {
+        likeCount: {increment:1},
+      },
+    }),
+  ]);
+
+  if(fetchPost.userId !== userId){
+    await prisma.notification.create({
+      data: {
+        recipientId: fetchPost.userId,
+        senderId: userId,
+        type: "like",
+        postId
+      }
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: "Liked a post sucessfully",
+    data: updatedLike
+  });
 };
