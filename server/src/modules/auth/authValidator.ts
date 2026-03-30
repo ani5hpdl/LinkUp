@@ -19,7 +19,7 @@ export const registerSchema = z.object({
     .regex(/[\W_]/, { message: 'Password must contain at least one special character' }),
 
   // Optional fields that you might want to include
-  display_name: z.string()
+  displayName: z.string()
     .max(60, { message: 'Display name cannot be longer than 60 characters' })
 
 });
@@ -36,7 +36,7 @@ export const loginSchema = z.object({
 });
 
 export const updateMeSchema = z.object({
-  display_name: z.string()
+  displayName: z.string()
     .min(1,{message : "Display Name must be more than 1 letter."})
     .max(60, { message: 'Display name cannot be longer than 60 characters' })
     .optional(),

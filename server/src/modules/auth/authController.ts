@@ -14,7 +14,7 @@ export const register = async (
   res: Response,
 ): Promise<Response<ApiResponse>> => {
   try {
-    const { username, email, password, display_name } = req.body;
+    const { username, email, password, displayName } = req.body;
 
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -44,14 +44,14 @@ export const register = async (
         username,
         email,
         password: hashedPassword,
-        display_name,
+        displayName,
       },
     });
 
     const { password: _, ...safeUser } = newUser;
 
-    const accessToken = generateAccessToken(newUser);
-    const refreshToken = generateRefreshToken(newUser);
+    const accessToken = generateAccessToken(safeUser);
+    const refreshToken = generateRefreshToken(safeUser);
 
     setCookie(res, accessToken, refreshToken);
 
@@ -235,7 +235,7 @@ export const updateMe = async (
     });
   }
 
-  const { display_name, bio, avatar_url } = req.body;
+  const { displayName, bio, avatar_url } = req.body;
 
   if (!req.user) {
     return res.status(401).json({
@@ -246,12 +246,12 @@ export const updateMe = async (
 
   try {
     const dataToUpdate: {
-      display_name?: string;
+      displayName?: string;
       bio?: string;
       avatar_url?: string;
     } = {};
 
-    if (display_name !== undefined) dataToUpdate.display_name = display_name;
+    if (displayName !== undefined) dataToUpdate.displayName = displayName;
     if (bio !== undefined) dataToUpdate.bio = bio;
     if (avatar_url !== undefined) dataToUpdate.avatar_url = avatar_url;
 

@@ -13,14 +13,139 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// USERS
+// ─────────────────────────────────────────────────────────────────────────
 model User {
-  id             String   @id @default(uuid()) @db.Uuid
-  username       String   @unique
-  email          String   @unique
-  password  String
-  display_name   String   @db.VarChar(60)
-  bio            String?  @db.Text
-  avatar_url     String?  @db.VarChar(500)
-  created_at     DateTime @default(now()) @db.Timestamptz
-  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username    String   @unique @db.VarChar(30)
+  email       String   @unique @db.VarChar(255)
+  password    String   @db.VarChar(255)
+  displayName String?  @db.VarChar(60)
+  bio         String?  @db.Text
+  avatarUrl   String?  @db.VarChar(500)
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+
+  // ─── Relations ──────────────────────────────────────────────────────
+  posts    Post[]
+  likes    Like[]
+  comments Comment[]
+
+  // follows: people this user is following
+  following Follow[] @relation("follower")
+  // follows: people following this user
+  followers Follow[] @relation("following")
+
+  // notifications received and sent
+  notificationsReceived Notification[] @relation("recipient")
+  notificationsSent     Notification[] @relation("sender")
+
+  @@map("user")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// POSTS
+// ─────────────────────────────────────────────────────────────────────────
+model Post {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @db.Uuid
+  content      String   @db.VarChar(280)
+  imageUrl     String?  @db.VarChar(500)
+  likeCount    Int      @default(0)
+  commentCount Int      @default(0)
+  createdAt    DateTime @default(now()) @db.Timestamptz
+  updatedAt    DateTime @updatedAt @db.Timestamptz
+
+  // ─── Relations ──────────────────────────────────────────────────────
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes         Like[]
+  comments      Comment[]
+  notifications Notification[]
+
+  // ─── Indexes ────────────────────────────────────────────────────────
+  @@index([userId]) // speed up feed queries
+  @@index([createdAt(sort: Desc)]) // speed up timeline sorting
+  @@map("posts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FOLLOWS  (composite PK — no duplicate follows possible)
+// ─────────────────────────────────────────────────────────────────────────
+model Follow {
+  followerId  String   @db.Uuid
+  followingId String   @db.Uuid
+  createdAt   DateTime @default(now()) @db.Timestamptz
+
+  // ─── Relations ──────────────────────────────────────────────────────
+  follower  User @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // ─── Composite PK prevents duplicate follows ────────────────────────
+  @@id([followerId, followingId])
+  // ─── Index ──────────────────────────────────────────────────────────
+  @@index([followingId]) // speed up follower lookups
+  @@map("follows")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// LIKES  (composite PK — one like per user per post)
+// ─────────────────────────────────────────────────────────────────────────
+model Like {
+  userId    String   @db.Uuid
+  postId    String   @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  // ─── Relations ──────────────────────────────────────────────────────
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // ─── Composite PK prevents duplicate likes ──────────────────────────
+  @@id([userId, postId])
+  @@map("likes")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COMMENTS
+// ─────────────────────────────────────────────────────────────────────────
+model Comment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @db.Uuid
+  postId    String   @db.Uuid
+  content   String   @db.VarChar(280)
+  createdAt DateTime @default(now()) @db.Timestamptz
+
+  // ─── Relations ──────────────────────────────────────────────────────
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────
+enum NotificationType {
+  like
+  comment
+  follow
+}
+
+model Notification {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipientId String           @db.Uuid
+  senderId    String           @db.Uuid
+  type        NotificationType
+  postId      String?          @db.Uuid // null for follow notifications
+  isRead      Boolean          @default(false)
+  createdAt   DateTime         @default(now()) @db.Timestamptz
+
+  // ─── Relations ──────────────────────────────────────────────────────
+  recipient User  @relation("recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender    User  @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  post      Post? @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  // ─── Index ──────────────────────────────────────────────────────────
+  @@index([recipientId, isRead]) // speed up unread counts
+  @@map("notifications")
 }
