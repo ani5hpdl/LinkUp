@@ -12,7 +12,7 @@ router.post("/register",validator(registerSchema),registerLimiter,register);
 router.post("/login",validator(loginSchema),loginLimiter,login);
 
 //---------Protected Routes
-router.post("/refresh",authenticate,refresh);
+router.post("/refresh",refresh);
 router.post("/logout",authenticate,logout);
 router.post("/me",authenticate,getMe);
 router.put("/me",authenticate,validator(updateMeSchema),updateMe);

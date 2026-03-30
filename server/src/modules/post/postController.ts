@@ -11,16 +11,9 @@ export const createPost = async (
   try {
     const { content, imageUrl } = req.body;
 
-    if (!req.user?.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
     const newPost = await prisma.post.create({
       data: {
-        userId: req.user.id,
+        userId: req.user!.id,
         content,
         imageUrl,
       },
@@ -47,17 +40,17 @@ export const updatePost = async (
     const { content, imageUrl } = req.body;
     const { postId } = req.params as { postId: string | undefined };
 
-    if (!postId || !req.user?.id) {
+    if (!postId) {
       return res.status(400).json({
         success: false,
-        message: "Post Not Found or Unauthorized user.",
+        message: "Post Not Found.",
       });
     }
 
     const fetchPost = await prisma.post.findUnique({
       where: {
         id: postId,
-        userId: req.user.id,
+        userId: req.user!.id,
       },
     });
 
@@ -77,7 +70,7 @@ export const updatePost = async (
     if (imageUrl !== undefined) dataToUpdate.imageUrl = imageUrl;
 
     const updatePost = await prisma.post.update({
-      where: { id: postId, userId: req.user.id },
+      where: { id: postId, userId: req.user!.id },
       data: dataToUpdate,
     });
 
@@ -101,17 +94,17 @@ export const deletePost = async (
   try {
     const { postId } = req.params as { postId: string | undefined };
 
-    if (!postId || !req.user?.id) {
+    if (!postId) {
       return res.status(400).json({
         success: false,
-        message: "Post Not Found or Unauthorized user.",
+        message: "Post Not Found .",
       });
     }
 
     const fetchPost = await prisma.post.findUnique({
       where: {
         id: postId,
-        userId: req.user.id
+        userId: req.user!.id
       },
     });
 
@@ -125,7 +118,7 @@ export const deletePost = async (
     await prisma.post.delete({
       where: {
         id: postId,
-        userId: req.user.id
+        userId: req.user!.id
       }
     })
 

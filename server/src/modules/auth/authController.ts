@@ -190,59 +190,19 @@ export const getMe = async (
   req: AuthRequest,
   res: Response,
 ): Promise<Response<ApiResponse>> => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: "User not authenticated",
-    });
-  }
-
-  try {
-    const fetchUser = await prisma.user.findUnique({
-      where: {
-        email: req.user.email,
-      },
-    });
-
-    if (!fetchUser) {
-      return res.status(200).json({
-        success: false,
-        message: "User Not Found",
-      });
-    }
-
     return res.status(200).json({
       success: true,
       message: "User Fetched",
-      data: fetchUser,
+      data: req.user,
     });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Server Error" + error,
-    });
-  }
 };
 
 export const updateMe = async (
   req: AuthRequest & { body: UpdateMeData },
   res: Response,
 ): Promise<Response<ApiResponse>> => {
-  if (!req.body) {
-    return res.status(401).json({
-      success: false,
-      message: "Nothing to change.",
-    });
-  }
 
   const { displayName, bio, avatar_url } = req.body;
-
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: "User not authenticated",
-    });
-  }
 
   try {
     const dataToUpdate: {
@@ -257,7 +217,7 @@ export const updateMe = async (
 
     const updateUser = await prisma.user.update({
       where: {
-        email: req.user.email,
+        id: req.user!.id,
       },
       data: dataToUpdate,
     });
