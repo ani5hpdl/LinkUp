@@ -1,16 +1,17 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 import type { IUser } from "../types";
+import { prisma } from "../config/db";
 
 export interface AuthRequest extends Request {
   user?: IUser;
 }
 
-export const authenticate = (
+export const authenticate = async(
   req: AuthRequest,
   res: Response,
   next: NextFunction,
-): Response | void => {
+): Promise<Response | void> => {
   const token =
     req.cookies?.accessToken ||
     (req.headers.authorization?.startsWith("Bearer ")
@@ -32,6 +33,7 @@ export const authenticate = (
         .json({ success: false, message: "JWT_SECRET not set" });
     }
     const decoded = jwt.verify(token, secret) as IUser;
+    const user    = await prisma.user.findUnique({ where: { id: decoded.id } });
     req.user = decoded;
     next();
   } catch (error) {

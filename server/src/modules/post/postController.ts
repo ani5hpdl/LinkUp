@@ -4,7 +4,7 @@ import { prisma } from "../../config/db";
 import type { AuthRequest } from "../../middleware/authenticate";
 import type { PostData, UpdatePostData } from "./postValidator";
 
-const createPost = async (
+export const createPost = async (
   req: AuthRequest & { body: PostData },
   res: Response,
 ): Promise<Response<ApiResponse>> => {
@@ -47,23 +47,24 @@ export const updatePost = async (
     const { content, imageUrl } = req.body;
     const { postId } = req.params as { postId: string | undefined };
 
-    if (!postId) {
+    if (!postId || !req.user?.id) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Try.",
+        message: "Post Not Found or Unauthorized user.",
       });
     }
 
     const fetchPost = await prisma.post.findUnique({
       where: {
         id: postId,
+        userId: req.user.id,
       },
     });
 
-    if (!fetchPost || fetchPost?.userId !== postId) {
+    if (!fetchPost) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Try.",
+        message: "Post Not Found.",
       });
     }
 
@@ -75,22 +76,135 @@ export const updatePost = async (
     if (content !== undefined) dataToUpdate.content = content;
     if (imageUrl !== undefined) dataToUpdate.imageUrl = imageUrl;
 
-    if (!req.user?.id) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
-
     const updatePost = await prisma.post.update({
-      where: { id: postId },
+      where: { id: postId, userId: req.user.id },
       data: dataToUpdate,
     });
 
     return res.status(200).json({
       success: true,
       message: "Post Updated",
-      data: updatePost
+      data: updatePost,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
+
+export const deletePost = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  try {
+    const { postId } = req.params as { postId: string | undefined };
+
+    if (!postId || !req.user?.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Post Not Found or Unauthorized user.",
+      });
+    }
+
+    const fetchPost = await prisma.post.findUnique({
+      where: {
+        id: postId,
+        userId: req.user.id
+      },
+    });
+
+    if (!fetchPost) {
+      return res.status(400).json({
+        success: false,
+        message: "Post Not Found.",
+      });
+    }
+
+    await prisma.post.delete({
+      where: {
+        id: postId,
+        userId: req.user.id
+      }
+    })
+
+    return res.status(200).json({
+      success: true,
+      message: "Post Updated",
+      data: updatePost,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
+
+const userSelect = {
+  username: true,
+  displayName: true,
+  avatarUrl: true,
+};
+
+export const getPostById = async (
+  req: Request,
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  try {
+    const { postId } = req.params as { postId: string };
+
+    if (!postId) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Try.",
+      });
+    }
+
+    const fetchPost = await prisma.post.findUnique({
+      where: {
+        id: postId,
+      },
+      include: {
+        //user who created the post
+        user: {
+          select: userSelect,
+        },
+
+        //all comments + who wrote comments
+        comments: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            user: {
+              select: userSelect,
+            },
+          },
+        },
+
+        //all likes + who like it
+        likes: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            user: {
+              select: userSelect,
+            },
+          },
+        },
+      },
+    });
+
+    if (!fetchPost) {
+      return res.status(400).json({
+        success: false,
+        message: "Post Not Found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Post Fetched Sucessfully.",
+      data: fetchPost,
     });
   } catch (error) {
     return res.status(500).json({
