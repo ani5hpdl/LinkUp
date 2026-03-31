@@ -18,7 +18,14 @@ export const updatePostSchema = z.object({
 
     imageUrl: z.string()
         .optional()    
-})
+});
+
+export const createCommentSchema = z.object({
+    content: z.string()
+        .min(1,{message: "Comment must be required"})
+        .max(225,{message: "Comment must not exceed 225 characters."})
+});
 
 export type PostData = z.infer<typeof createPostSchema>;
 export type UpdatePostData = z.infer<typeof updatePostSchema>;
+export type CreateComment = z.infer<typeof createCommentSchema>;

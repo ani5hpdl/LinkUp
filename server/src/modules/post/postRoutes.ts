@@ -1,13 +1,17 @@
 import { Router } from "express";
-import { createPost, deletePost, getPostById, toogleLike, updatePost } from "./postController";
+import { createComment, createPost, deleteComment, deletePost, getPostById, toogleLike, updatePost } from "./postController";
 import { authenticate } from "../../middleware/authenticate";
+import validator from "../../middleware/validator";
+import { createCommentSchema, createPostSchema, updatePostSchema } from "./postValidator";
 
 const router = Router();
 
-router.post("/",authenticate,createPost);
-router.put("/:id",authenticate,updatePost);
+router.post("/",authenticate,validator(createPostSchema),createPost);
+router.put("/:id",authenticate,validator(updatePostSchema),updatePost);
 router.delete("/:id",authenticate,deletePost);
 router.get("/:id",authenticate,getPostById);
 router.post("/:id/react",authenticate,toogleLike);
+router.post("/:id/comments",authenticate,validator(createCommentSchema),createComment);
+router.delete("/:id/comments/:cid",authenticate,deleteComment);
 
 module.exports = router;

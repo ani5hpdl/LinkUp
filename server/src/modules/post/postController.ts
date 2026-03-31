@@ -2,8 +2,9 @@ import type { ApiResponse } from "../../types";
 import type { Response, Request } from "express";
 import { prisma } from "../../config/db";
 import type { AuthRequest } from "../../middleware/authenticate";
-import type { PostData, UpdatePostData } from "./postValidator";
+import type { CreateComment, PostData, UpdatePostData } from "./postValidator";
 import { success } from "zod";
+import { fa } from "zod/locales";
 
 export const createPost = async (
   req: AuthRequest & { body: PostData },
@@ -232,7 +233,7 @@ export const toogleLike = async (
   });
 
   if (existing) {
-    const [,updatedLike] = await prisma.$transaction([
+    const [, updatedLike] = await prisma.$transaction([
       prisma.like.delete({
         where: {
           userId_postId: { userId, postId },
@@ -244,8 +245,8 @@ export const toogleLike = async (
           likeCount: { decrement: 1 },
         },
         select: {
-          likeCount: true
-        }
+          likeCount: true,
+        },
       }),
     ]);
 
@@ -261,11 +262,11 @@ export const toogleLike = async (
     return res.status(200).json({
       success: true,
       message: "Unliked Post sucessfully.",
-      data : updatedLike
+      data: updatedLike,
     });
   }
 
-  const [,updatedLike]= await prisma.$transaction([
+  const [, updatedLike] = await prisma.$transaction([
     prisma.like.create({
       data: {
         userId,
@@ -273,27 +274,128 @@ export const toogleLike = async (
       },
     }),
     prisma.post.update({
-      where: {id: postId},
+      where: { id: postId },
       data: {
-        likeCount: {increment:1},
+        likeCount: { increment: 1 },
       },
     }),
   ]);
 
-  if(fetchPost.userId !== userId){
+  if (fetchPost.userId !== userId) {
     await prisma.notification.create({
       data: {
         recipientId: fetchPost.userId,
         senderId: userId,
         type: "like",
-        postId
-      }
+        postId,
+      },
     });
   }
 
   return res.status(200).json({
     success: true,
     message: "Liked a post sucessfully",
-    data: updatedLike
+    data: updatedLike,
   });
+};
+
+export const createComment = async (
+  req: AuthRequest & {body : CreateComment},
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  try {
+    const { postId } = req.params as { postId: string };
+    const userId = req.user!.id;
+    const { content } = req.body;
+
+    const fetchPost = await prisma.post.findUnique({
+      where: { id: postId },
+    });
+    if (!fetchPost) {
+      return res.status(404).json({
+        success: false,
+        message: "Post Not Found.",
+      });
+    }
+
+    const [newComment] = await prisma.$transaction([
+      prisma.comment.create({ data: { userId, postId, content } }),
+      prisma.post.update({
+        where: { id: postId },
+        data: { commentCount: { increment: 1 } },
+      }),
+    ]);
+
+    if (fetchPost.userId !== userId) {
+      await prisma.notification.create({
+        data: {
+          recipientId: fetchPost.userId,
+          senderId: userId,
+          type: "comment",
+          postId,
+        },
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "New Comment added sucessfully.",
+      data: newComment,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
+};
+
+export const deleteComment = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  try {
+    const { postId, commentId } = req.params as {
+      postId: string;
+      commentId: string;
+    };
+
+    const userId = req.user!.id;
+
+    const isCommentExists = await prisma.comment.findUnique({
+      where: {
+        id: commentId,
+        postId,
+        userId,
+      },
+    });
+
+    if (!isCommentExists) {
+      return res.status(400).json({
+        success: false,
+        message: "Comment not found.",
+      });
+    }
+
+    await prisma.$transaction([
+      prisma.comment.delete({ where: { id: commentId } }),
+      prisma.post.update({
+        where: { id: postId },
+        data: { commentCount: { decrement: 1 } },
+      }),
+      prisma.notification.deleteMany({
+        where: { senderId: userId, type: "comment", postId },
+      }),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Comment deleted Sucessfully.",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+    });
+  }
 };
