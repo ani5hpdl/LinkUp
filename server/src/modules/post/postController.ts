@@ -3,8 +3,8 @@ import type { Response, Request } from "express";
 import { prisma } from "../../config/db";
 import type { AuthRequest } from "../../middleware/authenticate";
 import type { CreateComment, PostData, UpdatePostData } from "./postValidator";
+import { getPagination } from "../../utils/paginate";
 import { success } from "zod";
-import { fa } from "zod/locales";
 
 export const createPost = async (
   req: AuthRequest & { body: PostData },
@@ -399,3 +399,103 @@ export const deleteComment = async (
     });
   }
 };
+
+const postSelect = {
+  id:           true,
+  content:      true,
+  imageUrl:     true,
+  likeCount:    true,
+  commentCount: true,
+  createdAt:    true,
+  user: {
+    select: {
+      id:          true,
+      username:    true,
+      displayName: true,
+      avatarUrl:   true,
+    },
+  },
+};
+
+export const getFeed = async(
+  req: AuthRequest,
+  res: Response
+) : Promise<Response<ApiResponse>> => {
+  const {page,limit,skip} = getPagination(req);
+
+  const userId = req.user!.id;
+
+  const following = await prisma.follow.findMany({
+    where: {followerId: userId},
+    select: {
+      followingId: true
+    }
+  });
+
+  const followingIds = following.map((f)=>f.followingId);
+
+  if(followingIds.length === 0){
+    return res.status(200).json({
+      success: true,
+      message: "No Post Found for now.",
+      data: {
+        posts: [],
+        count: 0
+      }
+    });
+  }
+
+  const [posts, total] =await Promise.all([
+    prisma.post.findMany({
+      where: {userId: {in: followingIds}},
+      select: postSelect,
+      orderBy: {createdAt: "desc"},
+      skip,
+      take: limit
+    }),
+    prisma.post.count({
+      where:{
+        userId: {
+          in: followingIds
+        },
+      },
+    }),
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    message: "Post Fetched Sucessfully.",
+    data: {
+      posts,
+      count: total
+    }
+  });
+}
+
+export const getExplore = async(
+  req: Request,
+  res: Response
+) : Promise<Response<ApiResponse>> => {
+  const {page,limit,skip} = getPagination(req);
+
+  const [posts,total] = await Promise.all([
+    prisma.post.findMany({
+      select: postSelect,
+      orderBy: {
+        createdAt: "desc"
+      },
+      skip,
+      take: limit
+    }),
+    prisma.post.count(),
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    message: "Posts Explored.",
+    data: {
+      posts,
+      count: total
+    }
+  });
+} 

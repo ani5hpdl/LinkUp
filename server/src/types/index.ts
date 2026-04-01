@@ -14,3 +14,9 @@ export interface ApiResponse{
     message: string,
     data?: IUser
 }
+
+export interface PaginationOptions {
+  page:  number;
+  limit: number;
+  skip:  number;
+}
