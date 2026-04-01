@@ -14,7 +14,7 @@ router.post("/login",validator(loginSchema),loginLimiter,login);
 //---------Protected Routes
 router.post("/refresh",refresh);
 router.post("/logout",authenticate,logout);
-router.post("/me",authenticate,getMe);
+router.get("/me",authenticate,getMe);
 router.put("/me",authenticate,validator(updateMeSchema),updateMe);
 
 export default router;

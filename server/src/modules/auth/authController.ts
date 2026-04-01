@@ -114,6 +114,7 @@ export const login = async (
       message: "Login Sucessfully",
       data: safeUser,
       cookie: accessToken,
+      refreshToken: refreshToken,
     });
   } catch (error: unknown) {
     logger.error(error);
@@ -128,8 +129,17 @@ export const logout = async (
   req: Request,
   res: Response,
 ): Promise<Response<ApiResponse>> => {
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
+  res.clearCookie("accessToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    path: "/",
+  });
+
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    sameSite: "strict",
+    path: "/api/v1/auth/refresh",
+  });
 
   return res.status(200).json({
     success: true,
@@ -142,6 +152,7 @@ export const refresh = async (
   res: Response,
 ): Promise<Response<ApiResponse>> => {
   try {
+    logger.info(req.cookies);
     const token = req.cookies.refreshToken;
 
     if (!token) {
@@ -190,18 +201,17 @@ export const getMe = async (
   req: AuthRequest,
   res: Response,
 ): Promise<Response<ApiResponse>> => {
-    return res.status(200).json({
-      success: true,
-      message: "User Fetched",
-      data: req.user,
-    });
+  return res.status(200).json({
+    success: true,
+    message: "User Fetched",
+    data: req.user,
+  });
 };
 
 export const updateMe = async (
   req: AuthRequest & { body: UpdateMeData },
   res: Response,
 ): Promise<Response<ApiResponse>> => {
-
   const { displayName, bio, avatar_url } = req.body;
 
   try {

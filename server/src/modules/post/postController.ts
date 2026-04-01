@@ -5,6 +5,7 @@ import type { AuthRequest } from "../../middleware/authenticate";
 import type { CreateComment, PostData, UpdatePostData } from "./postValidator";
 import { getPagination } from "../../utils/paginate";
 import { success } from "zod";
+import { logger } from "../../utils/logger";
 
 export const createPost = async (
   req: AuthRequest & { body: PostData },
@@ -126,7 +127,7 @@ export const deletePost = async (
 
     return res.status(200).json({
       success: true,
-      message: "Post Updated",
+      message: "Post Deleted Sucessfully.",
       data: updatePost,
     });
   } catch (error) {
@@ -214,7 +215,7 @@ export const toogleLike = async (
   res: Response,
 ): Promise<Response<ApiResponse>> => {
   const { postId } = req.params as { postId: string };
-  const userId = req.user!.email;
+  const userId = req.user!.id;
 
   const fetchPost = await prisma.post.findUnique({
     where: { id: postId },
@@ -421,7 +422,8 @@ export const getFeed = async(
   req: AuthRequest,
   res: Response
 ) : Promise<Response<ApiResponse>> => {
-  const {page,limit,skip} = getPagination(req);
+  try {
+    const {page,limit,skip} = getPagination(req);
 
   const userId = req.user!.id;
 
@@ -470,6 +472,13 @@ export const getFeed = async(
       count: total
     }
   });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server error at getFeed.",
+      error: error
+    });
+  }
 }
 
 export const getExplore = async(

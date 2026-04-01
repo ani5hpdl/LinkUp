@@ -7,13 +7,13 @@ import { createCommentSchema, createPostSchema, updatePostSchema } from "./postV
 const router = Router();
 
 router.post("/",authenticate,validator(createPostSchema),createPost);
-router.put("/:id",authenticate,validator(updatePostSchema),updatePost);
-router.delete("/:id",authenticate,deletePost);
-router.get("/:id",authenticate,getPostById);
-router.post("/:id/react",authenticate,toogleLike);
-router.post("/:id/comments",authenticate,validator(createCommentSchema),createComment);
-router.delete("/:id/comments/:cid",authenticate,deleteComment);
 router.get("/feed",authenticate,getFeed);
 router.get("/explore",getExplore);
+router.put("/:postId",authenticate,validator(updatePostSchema),updatePost);
+router.delete("/:postId",authenticate,deletePost);
+router.get("/:postId",authenticate,getPostById);
+router.post("/:postId/react",authenticate,toogleLike);
+router.post("/:postId/comments",authenticate,validator(createCommentSchema),createComment);
+router.delete("/:postId/comments/:commentId",authenticate,deleteComment);
 
 export default router;

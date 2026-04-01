@@ -5,6 +5,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 
 import { logger } from "./utils/logger.js";
 import { requestId } from "./middleware/requestId.js";
@@ -24,6 +25,7 @@ app.use(
     methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
   }),
 );
+app.use(cookieParser());
 
 //-----Performance--------------------------
 app.use(compression());
