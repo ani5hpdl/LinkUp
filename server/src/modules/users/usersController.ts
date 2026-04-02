@@ -255,6 +255,13 @@ export const toogleFollow = async (
 
   const followingId = user.id;
 
+  if(followerId === followingId){
+    return res.status(200).json({
+      success: true,
+      message: "Oops you wanna follow yourself😭 ."
+    });
+  }
+
   const existing = await prisma.follow.findUnique({
     where: {
       followerId_followingId: { followerId, followingId },
