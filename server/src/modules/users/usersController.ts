@@ -255,10 +255,10 @@ export const toogleFollow = async (
 
   const followingId = user.id;
 
-  if(followerId === followingId){
+  if (followerId === followingId) {
     return res.status(200).json({
       success: true,
-      message: "Oops you wanna follow yourself😭 ."
+      message: "Oops you wanna follow yourself😭 .",
     });
   }
 
@@ -293,7 +293,7 @@ export const toogleFollow = async (
     prisma.follow.create({
       data: {
         followerId,
-        followingId
+        followingId,
       },
     }),
     prisma.follow.count({
@@ -308,4 +308,46 @@ export const toogleFollow = async (
     message: "Unfollow this User.",
     count,
   });
+};
+
+export const searchUser = async (
+  req: Request,
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  try {
+    const { keywords } = req.query as { keywords: string };
+
+    const terms = keywords.split(" ");
+
+    const users = await prisma.user.findMany({
+      where: {
+        AND: terms.map((term) => ({
+          OR: [
+            { username: { contains: term, mode: "insensitive" } },
+            { displayName: { contains: term, mode: "insensitive" } },
+          ],
+        })),
+      },
+    });
+
+    if (users.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No Data Found",
+        data: [],
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Some Data Found.",
+      data: users,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error.",
+      error,
+    });
+  }
 };
