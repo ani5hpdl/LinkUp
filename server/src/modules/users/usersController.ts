@@ -282,6 +282,14 @@ export const toogleFollow = async (
       }),
     ]);
 
+    await prisma.notification.create({
+      data: {
+        recipientId: followingId,
+        senderId: followerId,
+        type: "follow",
+      },
+    });
+
     return res.status(200).json({
       success: true,
       message: "Unfollow this User.",
@@ -302,6 +310,14 @@ export const toogleFollow = async (
       },
     }),
   ]);
+
+  await prisma.notification.deleteMany({
+    where: {
+      recipientId: followingId,
+      senderId: followerId,
+      type: "follow",
+    },
+  });
 
   return res.status(200).json({
     success: true,
