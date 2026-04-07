@@ -139,7 +139,7 @@ export const deletePost = async (
 };
 
 const userSelect = {
-  username: true,
+  id: true,
   displayName: true,
   avatarUrl: true,
 };
@@ -159,29 +159,42 @@ export const getPostById = async (
     }
 
     const fetchPost = await prisma.post.findUnique({
-      where: {
-        id: postId,
-      },
-      include: {
-        //user who created the post
+      where: { id: postId },
+      select: {
+        id: true,
+        content: true,
+        imageUrl: true,
+        createdAt: true,
+        updatedAt: true,
+
         user: {
           select: userSelect,
         },
 
-        //all comments + who wrote comments
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+
         comments: {
           orderBy: { createdAt: "asc" },
-          include: {
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
             user: {
               select: userSelect,
             },
           },
         },
 
-        //all likes + who like it
+        // optional: remove this if not needed
         likes: {
           orderBy: { createdAt: "asc" },
-          include: {
+          select: {
+            createdAt: true,
             user: {
               select: userSelect,
             },
@@ -206,6 +219,7 @@ export const getPostById = async (
     return res.status(500).json({
       success: false,
       message: "Internal Server Error.",
+      error
     });
   }
 };
