@@ -279,6 +279,9 @@ export const toogleLike = async (
       data: {
         likeCount: { increment: 1 },
       },
+      select: {
+        likeCount: true,
+      },
     }),
   ]);
 
@@ -301,7 +304,7 @@ export const toogleLike = async (
 };
 
 export const createComment = async (
-  req: AuthRequest & {body : CreateComment},
+  req: AuthRequest & { body: CreateComment },
   res: Response,
 ): Promise<Response<ApiResponse>> => {
   try {
@@ -402,99 +405,99 @@ export const deleteComment = async (
 };
 
 const postSelect = {
-  id:           true,
-  content:      true,
-  imageUrl:     true,
-  likeCount:    true,
+  id: true,
+  content: true,
+  imageUrl: true,
+  likeCount: true,
   commentCount: true,
-  createdAt:    true,
+  createdAt: true,
   user: {
     select: {
-      id:          true,
-      username:    true,
+      id: true,
+      username: true,
       displayName: true,
-      avatarUrl:   true,
+      avatarUrl: true,
     },
   },
 };
 
-export const getFeed = async(
+export const getFeed = async (
   req: AuthRequest,
-  res: Response
-) : Promise<Response<ApiResponse>> => {
+  res: Response,
+): Promise<Response<ApiResponse>> => {
   try {
-    const {page,limit,skip} = getPagination(req);
+    const { page, limit, skip } = getPagination(req);
 
-  const userId = req.user!.id;
+    const userId = req.user!.id;
 
-  const following = await prisma.follow.findMany({
-    where: {followerId: userId},
-    select: {
-      followingId: true
+    const following = await prisma.follow.findMany({
+      where: { followerId: userId },
+      select: {
+        followingId: true,
+      },
+    });
+
+    const followingIds = following.map((f) => f.followingId);
+
+    if (followingIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No Post Found for now.",
+        data: {
+          posts: [],
+          count: 0,
+        },
+      });
     }
-  });
 
-  const followingIds = following.map((f)=>f.followingId);
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where: { userId: { in: followingIds } },
+        select: postSelect,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.post.count({
+        where: {
+          userId: {
+            in: followingIds,
+          },
+        },
+      }),
+    ]);
 
-  if(followingIds.length === 0){
     return res.status(200).json({
       success: true,
-      message: "No Post Found for now.",
+      message: "Post Fetched Sucessfully.",
       data: {
-        posts: [],
-        count: 0
-      }
-    });
-  }
-
-  const [posts, total] =await Promise.all([
-    prisma.post.findMany({
-      where: {userId: {in: followingIds}},
-      select: postSelect,
-      orderBy: {createdAt: "desc"},
-      skip,
-      take: limit
-    }),
-    prisma.post.count({
-      where:{
-        userId: {
-          in: followingIds
-        },
+        posts,
+        count: total,
       },
-    }),
-  ]);
-
-  return res.status(200).json({
-    success: true,
-    message: "Post Fetched Sucessfully.",
-    data: {
-      posts,
-      count: total
-    }
-  });
+    });
   } catch (error) {
     return res.status(500).json({
       success: false,
       message: "Internal Server error at getFeed.",
-      error: error
+      error: error,
     });
   }
-}
+};
 
-export const getExplore = async(
+export const getExplore = async (
   req: Request,
-  res: Response
-) : Promise<Response<ApiResponse>> => {
-  const {page,limit,skip} = getPagination(req);
+  res: Response,
+): Promise<Response<ApiResponse>> => {
+  const { page, limit, skip } = getPagination(req);
 
-  const [posts,total] = await Promise.all([
+  const [posts, total] = await Promise.all([
     prisma.post.findMany({
       select: postSelect,
       orderBy: {
-        createdAt: "desc"
+        createdAt: "desc",
       },
       skip,
-      take: limit
+      take: limit,
     }),
     prisma.post.count(),
   ]);
@@ -504,7 +507,7 @@ export const getExplore = async(
     message: "Posts Explored.",
     data: {
       posts,
-      count: total
-    }
+      count: total,
+    },
   });
-} 
+};

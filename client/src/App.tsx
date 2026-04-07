@@ -3,6 +3,9 @@ import { Button } from "./components/ui/button";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import { ArrowRight, Sparkles, ShieldCheck, Users2 } from "lucide-react";
+import Home from "./pages/Home.tsx";
+import PostDetail from "./components/PostDetails.tsx";
+import Test from "./pages/Test.tsx";
 
 const Landing = () => (
   <div className="relative min-h-screen w-full overflow-hidden bg-void font-body selection:bg-lu-accent/30">
@@ -152,6 +155,9 @@ function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/test" element={<Test />} />
+          <Route path="/post" element={<PostDetail />} />
+          <Route path="/home" element={<Home />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

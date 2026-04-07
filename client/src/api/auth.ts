@@ -19,8 +19,8 @@ export interface User {
     displayName : string | null
     bio : string | null
     avatarUrl : string | null
-    createdAt : Date
-    updatedAt : Date
+    createdAt : string
+    updatedAt : string
 }
 
 export interface AuthResponse {
@@ -36,5 +36,19 @@ export const registerUser = async (data: RegisterData): Promise<AuthResponse> =>
 
 export const loginUser = async (data: LoginData) : Promise<AuthResponse> => {
     const response = await Api.post("/api/v1/auth/login",data)
+    return response.data;
+}
+
+export const refreshToken = async() : Promise<void> => {
+    const response = await Api.post("/api/v1/auth/refresh")
+    if(response.data.success){
+        console.log("Token Refreshed");
+    }else{
+        console.log("Try catch")
+    }
+}
+
+export const getMe = async() : Promise<AuthResponse> => {
+    const response = await Api.get("/api/v1/auth/me")
     return response.data;
 }
