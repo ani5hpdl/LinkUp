@@ -5,7 +5,7 @@ import {
   Repeat,
   Share,
 } from "lucide-react";
-import { updateLike, type Post } from "../api/post";
+import { updateLike, type Post } from "../api/posts.api";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -50,7 +50,7 @@ export function PostCard({ data }: PostCardProps) {
               {/* Avatar */}
               <Avatar className="h-10 w-10 rounded-xl shrink-0 border border-white/5 transition-transform group-hover:scale-[1.02]">
                 <AvatarImage
-                  src={post.user.avatarUrl ?? ""}
+                  src={post.user.avatarUrl ?? "/placeholder_avatar.png"}
                   alt={post.user.displayName ?? "User"}
                   className="object-cover"
                 />

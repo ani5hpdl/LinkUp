@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 import {
@@ -21,9 +21,9 @@ import {
   TooltipTrigger,
 } from "../components/ui/tooltip";
 import { useEffect, useState } from "react";
-import { getExplore, type Post } from "../api/post";
-import { getMe, refreshToken } from "../api/auth";
-import type { User } from "../api/auth";
+import { getExplore, type Post } from "../api/posts.api";
+import { getMe, refreshToken } from "../api/auth.api";
+import type { User } from "../api/auth.api";
 import { PostCard } from "../components/PostCard";
 import axios from "axios";
 
@@ -91,11 +91,12 @@ export default function Home() {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex h-screen w-full bg-[#030303] font-body text-slate-300 selection:bg-lu-accent/30 overflow-hidden">
-
         {/* 1. ULTRA-SLIM NAV (Icon Only) */}
         <aside className="flex w-18 flex-col items-center border-r border-white/4 py-6 bg-[#050505]">
           <div className="mb-10 h-8 w-8 rounded-xl bg-lu-accent flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.4)]">
-            <span className="text-white font-display font-black text-xs">L</span>
+            <span className="text-white font-display font-black text-xs">
+              L
+            </span>
           </div>
 
           <nav className="flex flex-col gap-4">
@@ -164,6 +165,11 @@ export default function Home() {
           {/* User Card - Bottom */}
           <div className="mt-auto flex items-center gap-3 p-3 rounded-2xl border border-white/3 bg-white/2">
             <Avatar className="h-8 w-8 rounded-lg shrink-0">
+                              <AvatarImage
+                  src={user?.avatarUrl ?? "/placeholder_avatar.png"}
+                  alt={user?.displayName ?? "User"}
+                  className="object-cover"
+                />
               <AvatarFallback className="rounded-lg bg-gradient-to-tr from-lu-accent to-lu-pink text-white text-xs font-bold">
                 {user?.username?.slice(0, 2).toUpperCase() ?? "??"}
               </AvatarFallback>
@@ -184,7 +190,6 @@ export default function Home() {
 
         {/* 3. MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto custom-scrollbar">
-
           {/* Top Header Bar */}
           <header className="sticky top-0 z-40 h-16 flex items-center justify-between border-b border-white/4 bg-[#030303]/80 px-8 backdrop-blur-xl">
             <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">
@@ -215,6 +220,11 @@ export default function Home() {
           <div className="border-b border-white/4 p-8">
             <div className="max-w-2xl mx-auto flex gap-6">
               <Avatar className="h-10 w-10 rounded-xl shrink-0">
+                <AvatarImage
+                  src={user?.avatarUrl ?? "/placeholder_avatar.png"}
+                  alt={user?.displayName ?? "User"}
+                  className="object-cover"
+                />
                 <AvatarFallback className="rounded-xl bg-slate-800 border border-white/5 text-slate-500 text-xs font-bold">
                   {user?.username?.slice(0, 2).toUpperCase() ?? "??"}
                 </AvatarFallback>
@@ -237,8 +247,8 @@ export default function Home() {
                       charCount >= 260
                         ? "text-lu-pink"
                         : charCount >= 200
-                        ? "text-yellow-500"
-                        : "text-slate-600"
+                          ? "text-yellow-500"
+                          : "text-slate-600"
                     }`}
                   >
                     {charCount} / 280
@@ -321,7 +331,6 @@ export default function Home() {
             </div>
           </div>
         </aside>
-
       </div>
     </TooltipProvider>
   );

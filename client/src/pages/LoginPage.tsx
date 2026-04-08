@@ -9,7 +9,7 @@ import { Checkbox } from "../components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import axios from "axios";
-import { loginUser } from "../api/auth";
+import { loginUser } from "../api/auth.api";
 
 const loginSchema = z.object({
   email: z

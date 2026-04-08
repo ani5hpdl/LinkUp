@@ -1,10 +1,10 @@
 import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import { Button } from "./components/ui/button";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import Login from "./pages/LoginPage.tsx";
+import Signup from "./pages/RegitserPage.tsx";
 import { ArrowRight, Sparkles, ShieldCheck, Users2 } from "lucide-react";
-import Home from "./pages/Home.tsx";
-import PostDetail from "./components/PostDetails.tsx";
+import Home from "./pages/HomePage.tsx";
+import PostDetail from "./components/posts/PostDetails.tsx";
 import Test from "./pages/Test.tsx";
 
 const Landing = () => (
@@ -156,7 +156,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/test" element={<Test />} />
-          <Route path="/post" element={<PostDetail />} />
+          {/* <Route path="/post" element={<PostDetail />} /> */}
           <Route path="/home" element={<Home />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

@@ -1,0 +1,1 @@
+// # Wraps application to provide current user state, login, and logout functions.

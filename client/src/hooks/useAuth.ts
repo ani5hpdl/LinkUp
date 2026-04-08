@@ -1,0 +1,1 @@
+//  # Wraps `useContext(AuthContext)` for a cleaner API.

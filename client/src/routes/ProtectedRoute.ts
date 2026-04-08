@@ -1,0 +1,1 @@
+// # Wraps components to only allow access to authenticated users.

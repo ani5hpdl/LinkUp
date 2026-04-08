@@ -1,0 +1,1 @@
+// # Wraps components to only allow access to non-authenticated users (e.g., Login/Register).

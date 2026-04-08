@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useState } from "react";
-import { registerUser } from "../api/auth";
+import { registerUser } from "../api/auth.api";
 import axios from "axios";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 

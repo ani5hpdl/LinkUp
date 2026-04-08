@@ -1,0 +1,1 @@
+//  # Client-side validation logic for forms (e.g., email format).

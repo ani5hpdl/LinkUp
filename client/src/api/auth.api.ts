@@ -1,4 +1,4 @@
-import Api from "../lib/axios";
+import Api from "./axios";
 
 export interface RegisterData {
     username: string

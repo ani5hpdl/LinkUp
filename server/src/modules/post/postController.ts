@@ -140,6 +140,7 @@ export const deletePost = async (
 
 const userSelect = {
   id: true,
+  username: true,
   displayName: true,
   avatarUrl: true,
 };

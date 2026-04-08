@@ -2,36 +2,31 @@ import {
   ArrowLeft, MoreHorizontal, Heart, MessageSquare, 
   Repeat, Share, Image as ImageIcon, Smile, SendHorizonal 
 } from "lucide-react";
-import { Button } from "./ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Separator } from "./ui/separator";
-import { ScrollArea } from "./ui/scroll-area";
-import { Textarea } from "./ui/textarea";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Separator } from "../ui/separator";
+import { ScrollArea } from "../ui/scroll-area";
+import { Textarea } from "../ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { useEffect, useState } from "react";
+import { getPostById } from "../../api/posts.api";
+import type { DetailedPost } from "../../api/posts.api";
 
-export default function PostDetail() {
-  const post = {
-    content: "Designing systems that scale isn't about complexity. It's about removing the noise. LinkUp v2 is built on this core philosophy.",
-    likeCount: 42,
-    commentCount: 1,
-    createdAt: "2026-04-01T11:13:29.047Z",
-    user: {
-      username: "ani5hpdl",
-      displayName: "itsmeanish635",
-      avatarUrl: null
-    },
-    comments: [
-      {
-        content: "The clean architecture approach you took with the API routes really shows. Looking forward to the documentation!",
-        createdAt: "2026-04-01T11:22:33.175Z",
-        user: {
-          username: "dev_kris",
-          displayName: "Kris Tech",
-          avatarUrl: null
-        }
-      }
-    ]
-  };
+type PostCardDetailsProps = {
+  id : string;
+}
+
+export default function PostDetail({id} : PostCardDetailsProps) {
+
+  const [post,setPosts] = useState<DetailedPost>();
+
+  useEffect(()=> { 
+    const fetchPost = async(id : string) => {
+      const response = await getPostById(id);
+      setPosts(response.data)
+    } 
+    fetchPost(id);
+  },[])
 
   return (
     <TooltipProvider delayDuration={0}>
