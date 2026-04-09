@@ -9,3 +9,9 @@ const Api = axios.create({
 });
 
 export default Api;
+
+/**
+ * AXIOS INSTANCE CONFIGURATION
+ * Centralized HTTP client with interceptors for automatic Auth header 
+ * injection and global error handling (e.g., redirecting on 401).
+ */

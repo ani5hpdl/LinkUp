@@ -90,3 +90,9 @@ export const getPostById = async(id: string) : Promise<PostDetailResponse>  => {
     const response = await Api.get(`/api/v1/post/${id}`);
     return response.data;
 }
+
+/**
+ * POSTS API SERVICES
+ * Handles all asynchronous network requests related to the Post entity.
+ * Supports pagination (feed/explore) and multipart/form-data for image uploads.
+ */
