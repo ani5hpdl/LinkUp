@@ -10,7 +10,7 @@ import {
   SendHorizonal,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Separator } from "../ui/separator";
 import { ScrollArea } from "../ui/scroll-area";
 import { Textarea } from "../ui/textarea";
@@ -20,7 +20,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { updateLike, type DetailedPost } from "../../api/posts.api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { updateLike, type DetailedPost, type Users } from "../../api/posts.api";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,6 +32,9 @@ type PostCardDetailsProps = {
 export default function PostDetail({ post }: PostCardDetailsProps) {
   const navigate = useNavigate();
   const [likeCount, setLikeCount] = useState<Record<string, number>>({});
+  const [openLikes, setOpenLikes] = useState(false);
+  const [likedUsers, setLikedUsers] = useState<Users[]>([]);
+  const [loadingLikes, setLoadingLikes] = useState(false);
 
   const toggleLike = async (id: string): Promise<void> => {
     try {
@@ -40,18 +44,32 @@ export default function PostDetail({ post }: PostCardDetailsProps) {
           ...prev,
           [id]: response.data.likeCount,
         }));
+        setLikedUsers(post.likes.map((l) => l.user));
       }
     } catch (error) {
       console.error("Like failed", error);
     }
   };
 
+  const handleOpenLikes = async () => {
+    setOpenLikes(true);
+    setLoadingLikes(true);
+
+    try {
+      setLikedUsers(post.likes.map((l) => l.user));
+    } catch (err) {
+      console.error("Failed to fetch likes", err);
+    } finally {
+      setLoadingLikes(false);
+    }
+  };
+
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex h-screen w-full bg-[#030303] font-body text-slate-300 selection:bg-lu-accent/30 overflow-hidden">
+      <div className="flex h-screen w-full bg-[#030303] font-body text-slate-300 selection:bg-lu-accent/30 overflow-auto no-scrollbar">
         <main className="flex-1 flex flex-col max-w-3xl mx-auto border-x border-white/4 bg-[#050505]/30">
           {/* HEADER */}
-          <header className="h-16 flex items-center justify-between px-6 border-b border-white/4 sticky top-0 bg-[#030303]/80 backdrop-blur-xl z-50">
+          <header className="h-16 flex items-center justify-between px-6 border-b border-white/4 sticky top-0 bg-[#030303]/80 backdrop-blur-md bg-black/60 z-50">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -113,7 +131,10 @@ export default function PostDetail({ post }: PostCardDetailsProps) {
 
                   {/* STATS SECTION */}
                   <div className="flex gap-8 px-1">
-                    <div className="group cursor-pointer">
+                    <div
+                      className="group cursor-pointer"
+                      onClick={handleOpenLikes}
+                    >
                       <span className="text-sm font-bold text-white group-hover:text-lu-accent transition-colors">
                         {post._count.likes}
                       </span>
@@ -195,6 +216,48 @@ export default function PostDetail({ post }: PostCardDetailsProps) {
             </div>
 
             <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+
+            <Dialog open={openLikes} onOpenChange={setOpenLikes}>
+              <DialogContent className="bg-[#0A0A0A] border-white/10 text-white max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-xs font-bold tracking-[0.2em] text-slate-400">
+                    SIGNALS
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="h-px bg-white/5 my-3" />
+
+                <div className="mt-4 space-y-4 max-h-[400px] overflow-auto no-scrollbar">
+                  {loadingLikes ? (
+                    <p className="text-slate-500 text-sm">Loading...</p>
+                  ) : likedUsers.length === 0 ? (
+                    <p className="text-slate-500 text-sm">No signals yet</p>
+                  ) : (
+                    likedUsers.map((user) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center gap-3 hover:bg-white/5 px-2 rounded-xl transition"
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.avatarUrl ?? ""} />
+                          <AvatarFallback>
+                            {user.displayName?.slice(0, 2)}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div>
+                          <p className="text-sm font-bold text-white">
+                            {user.displayName}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            @{user.username}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* REPLY INPUT */}
             <div className="p-8 bg-white/[0.01]">

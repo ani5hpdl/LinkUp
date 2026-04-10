@@ -48,7 +48,7 @@ export interface DetailedPost {
     likes : Likes[]
 }
 
-interface Users {
+export interface Users {
     id : string
     username: string
     displayName : string
@@ -69,7 +69,7 @@ interface Comment {
 
 interface Likes {
     createdAt : string
-    user : User
+    user : Users
 }
 
 export const getFeed = async (): Promise<PostResponse> => {
