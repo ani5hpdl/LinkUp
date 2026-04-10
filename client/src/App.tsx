@@ -4,7 +4,6 @@ import Login from "./pages/LoginPage.tsx";
 import Signup from "./pages/RegitserPage.tsx";
 import { ArrowRight, Sparkles, ShieldCheck, Users2 } from "lucide-react";
 import Home from "./pages/HomePage.tsx";
-import PostDetail from "./components/posts/PostDetails.tsx";
 import Test from "./pages/Test.tsx";
 
 const Landing = () => (
