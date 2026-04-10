@@ -15,7 +15,7 @@ export function NavRail({ items }: NavRailProps) {
   return (
     <aside className="flex w-18 flex-col items-center border-r border-white/4 py-6 bg-[#050505]">
       <div className="mb-10 h-8 w-8 rounded-xl bg-lu-accent flex items-center justify-center shadow-[0_0_15px_rgba(139,92,246,0.4)]">
-        <span className="text-white font-display font-black text-xs">L</span>
+        <img src="/logo.png" alt="" />
       </div>
 
       <nav className="flex flex-col gap-4">
