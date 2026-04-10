@@ -18,10 +18,11 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type PostCardProps = {
-  data: Post[];
+  post: Post;
+  onClick: (id: string) => void;
 };
 
-export function PostCard({ data }: PostCardProps) {
+export function PostCard({ post, onClick }: PostCardProps) {
   const [likeCount, setLikeCount] = useState<Record<string, number>>({});
 
   const toggleLike = async (id: string): Promise<void> => {
@@ -40,10 +41,9 @@ export function PostCard({ data }: PostCardProps) {
 
   return (
     <div className="space-y-4">
-      {data &&
-        data.map((post) => (
           <article
             key={post.id}
+            onClick={()=>onClick(post.id)}
             className="group relative rounded-2xl border border-white/3 bg-white/1 p-6 transition-all duration-300 hover:bg-white/2 hover:border-white/8 cursor-pointer"
           >
             <div className="flex gap-5">
@@ -177,7 +177,6 @@ export function PostCard({ data }: PostCardProps) {
               </div>
             </div>
           </article>
-        ))}
     </div>
   );
 }
