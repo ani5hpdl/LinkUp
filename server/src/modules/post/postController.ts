@@ -180,7 +180,7 @@ export const getPostById = async (
         },
 
         comments: {
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: "desc" },
           select: {
             id: true,
             content: true,
