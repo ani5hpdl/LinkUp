@@ -1,5 +1,6 @@
 import Api from "./axios";
 import type { User } from "./auth.api"
+import { boolean, string, success } from "zod";
 
 export interface Post {
     id: string,
@@ -72,6 +73,22 @@ interface Likes {
     user : Users
 }
 
+export interface CommentResponse {
+    success: boolean
+    message: string
+    data : {
+        id: string
+        userId : string
+        postId : string
+        content : string
+        createdAt : string
+    }
+}
+
+interface CommentData {
+    content : string
+}
+
 export const getFeed = async (): Promise<PostResponse> => {
     const response = await Api.get("/api/v1/post/feed");
     return response.data;
@@ -89,6 +106,11 @@ export const updateLike = async(id: string) : Promise<LikeResponse> => {
 
 export const getPostById = async(id: string) : Promise<PostDetailResponse>  => {
     const response = await Api.get(`/api/v1/post/${id}`);
+    return response.data;
+}
+
+export const createComment = async(id: string, data: CommentData) : Promise<CommentResponse> => {
+    const response = await Api.post(`/api/v1/post/${id}/comments`,data);
     return response.data;
 }
 
