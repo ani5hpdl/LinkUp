@@ -1,12 +1,13 @@
 # LinkUp (client + API)
 
 Full-stack social network with a React + Vite frontend and an Express + PostgreSQL backend secured with JWTs and httpOnly cookies.  
-**Last updated:** 2026-04-06 (Asia/Kathmandu, UTC+05:45).
+**Last updated:** 2026-04-12 (Asia/Kathmandu, UTC+05:45).
 
 ## Features at a glance
 - Auth: register, login, refresh, logout, me, update profile; rate limits on sensitive routes.
 - Social graph: follow/unfollow, follower/following lists (routes exist, see note below).
 - Posts: create/edit/delete, per-post likes and comments, personal feed and global explore.
+- Post detail view: `/post/:id` page shows the post, live like count, comment thread, and a modal listing users who liked it.
 - UX: landing page plus login/signup screens styled with Tailwind CSS v4 and shadcn-inspired components.
 - Observability and safety: Helmet, CORS allowlist via `CLIENT_URL`, rate limiting, request IDs, compression, access/error logs via morgan -> Winston.
 
