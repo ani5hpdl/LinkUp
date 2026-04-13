@@ -1,78 +1,22 @@
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useState } from "react";
-import { registerUser } from "../api/auth.api";
-import axios from "axios";
-import { CheckCircle2, Eye, EyeOff } from "lucide-react";
-
-const signupSchema = z
-  .object({
-    username: z
-      .string()
-      .min(3, "At least 3 characters")
-      .max(30, "Max 30 characters"),
-    displayName: z
-      .string()
-      .min(3, "At least 3 characters")
-      .max(60, "Max 60 characters"),
-    email: z.string().email("Enter a valid email").max(255),
-    password: z
-      .string()
-      .min(8, "At least 8 characters")
-      .max(255)
-      .regex(/[A-Z]/, "Must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Must contain at least one number")
-      .regex(/[\W_]/, "Must contain at least one special character"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-
-type SignupForm = z.infer<typeof signupSchema>;
+import { Eye, EyeOff } from "lucide-react";
+import { useRegister } from "../hooks/useAuth";
 
 export default function Signup() {
-  const navigate = useNavigate();
-  const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
     handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<SignupForm>({
-    resolver: zodResolver(signupSchema),
-    mode: "onChange",
-  });
-
-  // Watch fields for the "available" UI feedback
-  const watchedUsername = watch("username");
-
-  const onSubmit = async (data: SignupForm) => {
-    setServerError(null);
-    try {
-      const { confirmPassword, ...registerData } = data;
-      const response = await registerUser(registerData);
-      if (response.success) {
-        navigate("/");
-      }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message;
-        setServerError(message || "Something went wrong. Please try again.");
-      } else {
-        setServerError("Something went wrong. Please try again.");
-      }
-    }
-  };
+    formState: { errors },
+    onSubmit,
+    isLoading,
+    error,
+  } = useRegister();
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-void font-body selection:bg-lu-accent/30 lg:flex-row">
@@ -164,19 +108,7 @@ export default function Signup() {
                   placeholder="alexcurates"
                   className="h-12 border-none bg-white pr-10 text-void placeholder:text-muted/60 focus-visible:ring-2 focus-visible:ring-lu-accent rounded-xl"
                 />
-                {watchedUsername &&
-                  watchedUsername.length > 2 &&
-                  !errors.username && (
-                    <CheckCircle2 className="absolute right-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-teal animate-in zoom-in" />
-                  )}
               </div>
-              {watchedUsername &&
-                watchedUsername.length > 2 &&
-                !errors.username && (
-                  <p className="text-[10px] text-teal font-bold px-1 uppercase tracking-tighter">
-                    Username is available
-                  </p>
-                )}
               {errors.username && (
                 <p className="text-[11px] text-pink font-medium px-1">
                   {errors.username.message}
@@ -219,6 +151,8 @@ export default function Signup() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-void transition-colors"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+
                   >
                     {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
@@ -243,9 +177,9 @@ export default function Signup() {
               </p>
             )}
 
-            {serverError && (
+            {error && (
               <div className="rounded-xl bg-pink/10 border border-pink/20 p-3 text-xs text-pink text-center font-medium">
-                {serverError}
+                {error}
               </div>
             )}
 
@@ -270,10 +204,10 @@ export default function Signup() {
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isLoading}
               className="h-14 w-full rounded-2xl bg-lu-accent text-base font-bold text-white shadow-lg shadow-lu-accent/20 transition-all hover:bg-lu-accent/90 hover:scale-[1.01] active:scale-[0.98]"
             >
-              {isSubmitting ? "Creating account..." : "Create Account"}
+              {isLoading ? "Creating account..." : "Create Account"}
             </Button>
 
             <p className="text-center text-sm text-muted">

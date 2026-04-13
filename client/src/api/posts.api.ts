@@ -1,6 +1,5 @@
 import Api from "./axios";
 import type { User } from "./auth.api"
-import { boolean, string, success } from "zod";
 
 export interface Post {
     id: string,

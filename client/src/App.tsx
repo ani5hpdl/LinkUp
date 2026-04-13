@@ -1,7 +1,7 @@
 import { Navigate, NavLink, Route, Routes } from "react-router-dom";
 import { Button } from "./components/ui/button";
 import Login from "./pages/LoginPage.tsx";
-import Signup from "./pages/RegitserPage.tsx";
+import Signup from "./pages/RegisterPage.tsx";
 import { ArrowRight, Sparkles, ShieldCheck, Users2 } from "lucide-react";
 import Home from "./pages/HomePage.tsx";
 import Test from "./pages/Test.tsx";

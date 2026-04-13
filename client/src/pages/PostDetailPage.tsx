@@ -33,7 +33,7 @@ const PostDetailPage = () => {
             <PostDetail postId={id} />
           ) : (
             <div className="p-8 text-center text-rose-500 font-bold uppercase tracking-widest">
-              Oops! No Signal ID found bbg!!
+              Post not found. Please check the URL and try again.
             </div>
           )}
         </main>

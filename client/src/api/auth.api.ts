@@ -29,14 +29,14 @@ export interface AuthResponse {
     data: User
 }
 
-export const registerUser = async (data: RegisterData): Promise<AuthResponse> => {
+export const registerUser = async (data: RegisterData): Promise<User> => {
     const response = await Api.post("/api/v1/auth/register",data)
-    return response.data;
+    return response.data.data;
 }
 
-export const loginUser = async (data: LoginData) : Promise<AuthResponse> => {
+export const loginUser = async (data: LoginData) : Promise<User> => {
     const response = await Api.post("/api/v1/auth/login",data)
-    return response.data;
+    return response.data.data;
 }
 
 export const refreshToken = async() : Promise<void> => {
@@ -50,5 +50,5 @@ export const refreshToken = async() : Promise<void> => {
 
 export const getMe = async() : Promise<AuthResponse> => {
     const response = await Api.get("/api/v1/auth/me")
-    return response.data;
+    return response.data.data;
 }
