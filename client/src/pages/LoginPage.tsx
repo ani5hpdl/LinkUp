@@ -1,29 +1,12 @@
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Checkbox } from "../components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import axios from "axios";
-import { loginUser } from "../api/auth.api";
+import { useLogin } from "../hooks/useAuth";
 
-const loginSchema = z.object({
-  email: z
-    .string()
-    .email({ message: "Invalid email address" })
-    .max(255, { message: "Email cannot be longer than 255 characters" }),
-
-  password: z
-    .string()
-    .min(8, { message: "Password must be at least 8 characters" })
-    .max(255, { message: "Password cannot be longer than 255 characters" }),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -31,30 +14,11 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-  });
-  const navigate = useNavigate();
-  const [serverError, setServerError] = useState<string | null>(null);
-
-  const onSubmit = async (data: LoginForm) => {
-    setServerError(null);
-
-    try {
-      const response = await loginUser(data);
-      if (response.success) {
-        navigate("/");
-      }
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        const message = error.response?.data?.message;
-        setServerError(message || "Something went wrong. Please try again.");
-      } else {
-        setServerError("Something went wrong. Please try again.");
-      }
-    }
-  };
+    formState: {errors},
+    onSubmit,
+    isLoading,
+    error,
+  } = useLogin();
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-void font-body selection:bg-lu-accent/30 lg:flex-row">
@@ -211,18 +175,18 @@ export default function Login() {
               </Link>
             </div>
 
-            {serverError && (
+            {error && (
               <div className="rounded-xl bg-pink/10 border border-pink/20 p-3 text-xs text-pink text-center font-medium">
-                {serverError}
+                {error}
               </div>
             )}
 
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isLoading}
               className="h-14 w-full rounded-2xl bg-lu-accent text-base font-bold text-white shadow-lg shadow-lu-accent/20 transition-all hover:bg-lu-accent/90 hover:scale-[1.01] active:scale-[0.98]"
             >
-              {isSubmitting ? "Authenticating..." : "Sign in to account"}
+              {isLoading ? "Authenticating..." : "Sign in to account"}
             </Button>
 
             <p className="text-center text-sm text-muted">
