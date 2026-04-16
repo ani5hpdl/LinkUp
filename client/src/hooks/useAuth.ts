@@ -3,8 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import z from "zod";
-import { getMe, loginUser, registerUser } from "../api/auth.api";
-import type { AxiosError } from "axios";
+import { getMe, loginUser, logOut, registerUser } from "../api/auth.api";
 import { parseAxiosError } from "../lib/parseAxiosError";
 
 /**
@@ -147,4 +146,22 @@ export const useAuth = () => {
     isError: query.isError,
     error: query.error,
   };
+};
+
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  return useMutation({
+    mutationFn: logOut,
+    onSuccess: () => {
+      queryClient.clear();
+      navigate("/login");
+    },
+    onError: () => {
+      sessionStorage.removeItem("refreshToken");
+      queryClient.clear();
+      navigate("/login");
+    }
+  });
 };
