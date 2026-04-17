@@ -1,114 +1,117 @@
 import Api from "./axios";
-import type { User } from "./auth.api"
 
-export interface Post {
-    id: string,
-    content: string,
-    imageUrl: string | null,
-    likeCount: number,
-    commentCount: number,
-    createdAt: string,
-    user: User
+interface UserFetched {
+    id: string;
+    username: string;
+    displayName: string | null;
+    avatarUrl: string | null;
 }
 
-export interface PostResponse {
-    success : boolean
-    message : string
-    data : {
-        posts : Post[]
-        count : number 
-    }
+interface PostPage {
+    id: string;
+    content: string;
+    imageUrl: string | null;
+    likeCount: number;
+    commentCount: number;
+    createdAt: Date;
+    user: UserFetched;
+    count: number;
+    page: number;
+    limit: number;
+    hasNext: boolean;
 }
 
-export interface UpdatedLike {
-    likeCount : number
+interface Post {
+    id: string;
+    userId: string;
+    content: string;
+    imageUrl: string | null;
+    likeCount: number;
+    commentCount: number;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
-export interface LikeResponse {
-    success : boolean
-    message : string
-    data : UpdatedLike
+interface LikeUpdate {
+    updatedLike : number
 }
 
-export interface PostDetailResponse { 
-    success : boolean
-    message : string
-    data : DetailedPost
-}
-
-export interface DetailedPost {
-    id: string
-    content : string
-    imageUrl : string | null
-    createdAt : string
-    updatedAt : string
-    user : Users
-    _count : Count
-    comments : Comment[]
-    likes : Likes[]
-}
-
-export interface Users {
-    id : string
-    username: string
-    displayName : string
-    avatarUrl : string | null
-}
-
-interface Count {
-    likes : number
-    comments : number
-}
-
-interface Comment {
-    id : string
-    content : string
-    createdAt : string
-    user : User
-}
-
-interface Likes {
-    createdAt : string
-    user : Users
-}
-
-export interface CommentResponse {
-    success: boolean
-    message: string
-    data : {
-        id: string
-        userId : string
-        postId : string
-        content : string
-        createdAt : string
-    }
+interface DetailedPost extends Post {
+    comments : {
+        id: string;
+        content: string;
+        createdAt: Date;
+        user: UserFetched
+    }[];
+    likes : {
+        createdAt : string;
+        user : UserFetched
+    }[];
+    _count : {
+        likes : number;
+        comments : number
+    };
 }
 
 interface CommentData {
-    content : string
+    id: string;
+    userId: string;
+    content: string;
+    createdAt: Date;
+    postId: string;
 }
 
-export const getFeed = async (): Promise<PostResponse> => {
+type ApiResponse<T = unknown, E = unknown> =
+  | {
+      success: true;
+      message?: string;
+      data?: T;
+      error?: never;
+    }
+  | {
+      success: false;
+      message?: string;
+      error?: E;
+      data?: never;
+    };
+
+export const getFeed = async (): Promise<ApiResponse<PostPage[]>> => {
     const response = await Api.get("/api/v1/post/feed");
     return response.data;
 }
 
-export const getExplore = async() : Promise<PostResponse> => {
+export const getExplore = async() : Promise<ApiResponse<PostPage[]>> => {
     const response = await Api.get("/api/v1/post/explore");
     return response.data;
 }
 
-export const updateLike = async(id: string) : Promise<LikeResponse> => {
+
+export const createPost = async(data: any) : Promise<ApiResponse<Post>> => {
+    const response = await Api.post("/api/v1/post",data);
+    return response.data;
+}
+
+export const updatePost = async(id : string, data : any) : Promise<ApiResponse<Post>> => {
+    const response = await Api.put(`/api/v1/post/${id}`,data);
+    return response.data;
+}
+
+export const deletePost = async(id: string) : Promise<ApiResponse> => {
+    const response = await Api.put(`/api/v1/post/${id}`);
+    return response.data;
+}
+
+export const updateLike = async(id: string) : Promise<ApiResponse<LikeUpdate>> => {
     const response = await Api.post(`/api/v1/post/${id}/react`);
     return response.data;
 }
 
-export const getPostById = async(id: string) : Promise<PostDetailResponse>  => {
-    const response = await Api.get(`/api/v1/post/${id}`);
+export const getPostById = async(postId: string) : Promise<DetailedPost>  => {
+    const response = await Api.get(`/api/v1/post/${postId}`);
     return response.data;
 }
 
-export const createComment = async(id: string, data: CommentData) : Promise<CommentResponse> => {
+export const createComment = async(id: string, data: CommentData) : Promise<CommentData> => {
     const response = await Api.post(`/api/v1/post/${id}/comments`,data);
     return response.data;
 }

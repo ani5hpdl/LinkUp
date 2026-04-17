@@ -31,6 +31,7 @@ export const createPost = async (
     return res.status(500).json({
       success: false,
       message: "Internal Server Error.",
+      error
     });
   }
 };
@@ -128,7 +129,6 @@ export const deletePost = async (
     return res.status(200).json({
       success: true,
       message: "Post Deleted Sucessfully.",
-      data: updatePost,
     });
   } catch (error) {
     return res.status(500).json({
@@ -220,7 +220,7 @@ export const getPostById = async (
     return res.status(500).json({
       success: false,
       message: "Internal Server Error.",
-      error
+      error,
     });
   }
 };
@@ -488,6 +488,9 @@ export const getFeed = async (
       data: {
         posts,
         count: total,
+        page,
+        limit,
+        hasNext: skip + posts.length < total,
       },
     });
   } catch (error) {
@@ -523,6 +526,9 @@ export const getExplore = async (
     data: {
       posts,
       count: total,
+      page,
+      limit,
+      hasNext: skip + posts.length < total,
     },
   });
 };
