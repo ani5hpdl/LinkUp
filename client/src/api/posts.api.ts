@@ -8,13 +8,15 @@ interface UserFetched {
 }
 
 interface PostPage {
-    id: string;
-    content: string;
-    imageUrl: string | null;
-    likeCount: number;
-    commentCount: number;
-    createdAt: Date;
-    user: UserFetched;
+    posts : {
+        id: string;
+        content: string;
+        imageUrl: string | null;
+        likeCount: number;
+        commentCount: number;
+        createdAt: Date;
+        user: UserFetched;
+    }[];
     count: number;
     page: number;
     limit: number;
@@ -61,6 +63,15 @@ interface CommentData {
     postId: string;
 }
 
+interface CreatePostData {
+    content : string,
+    imageUrl? : string
+}
+
+interface CreateCommentData {
+    content : string
+}
+
 type ApiResponse<T = unknown, E = unknown> =
   | {
       success: true;
@@ -75,29 +86,29 @@ type ApiResponse<T = unknown, E = unknown> =
       data?: never;
     };
 
-export const getFeed = async (): Promise<ApiResponse<PostPage[]>> => {
+export const getFeed = async (): Promise<ApiResponse<PostPage>> => {
     const response = await Api.get("/api/v1/post/feed");
     return response.data;
 }
 
-export const getExplore = async() : Promise<ApiResponse<PostPage[]>> => {
+export const getExplore = async() : Promise<ApiResponse<PostPage>> => {
     const response = await Api.get("/api/v1/post/explore");
     return response.data;
 }
 
 
-export const createPost = async(data: any) : Promise<ApiResponse<Post>> => {
+export const createPost = async(data: CreatePostData) : Promise<ApiResponse<Post>> => {
     const response = await Api.post("/api/v1/post",data);
     return response.data;
 }
 
-export const updatePost = async(id : string, data : any) : Promise<ApiResponse<Post>> => {
+export const updatePost = async(id : string, data : CreatePostData) : Promise<ApiResponse<Post>> => {
     const response = await Api.put(`/api/v1/post/${id}`,data);
     return response.data;
 }
 
 export const deletePost = async(id: string) : Promise<ApiResponse> => {
-    const response = await Api.put(`/api/v1/post/${id}`);
+    const response = await Api.delete(`/api/v1/post/${id}`);
     return response.data;
 }
 
@@ -111,7 +122,7 @@ export const getPostById = async(postId: string) : Promise<DetailedPost>  => {
     return response.data;
 }
 
-export const createComment = async(id: string, data: CommentData) : Promise<CommentData> => {
+export const createComment = async(id: string, data: CreateCommentData) : Promise<CommentData> => {
     const response = await Api.post(`/api/v1/post/${id}/comments`,data);
     return response.data;
 }
