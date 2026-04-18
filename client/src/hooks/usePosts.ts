@@ -29,6 +29,7 @@ import {
   updatePost,
 } from "../api/posts.api";
 import { parseAxiosError } from "../lib/parseAxiosError";
+import { toastAction, toastError } from "../lib/toast";
 
 export const postKeys = {
   all: ["posts"] as const,
@@ -103,19 +104,21 @@ export const useCreatePost = () => {
     mutationFn: createPost,
     onSuccess: () => {
       invalidatePostLists(queryClient);
+      toastAction.published("Post published.");
     },
     onError: (error: unknown) => {
-      console.error(error);
+      toastError(parseAxiosError(error));
     },
   });
 
   const onSubmit = (data: PostForm) => {
-    mutation.mutate(data);
+    return mutation.mutateAsync(data);
   };
 
   return {
     register: form.register,
     handleSubmit: form.handleSubmit,
+    setValue: form.setValue,
     formState: form.formState,
     onSubmit,
     isLoading: mutation.isPending,
@@ -139,19 +142,21 @@ export const useUpdatePost = () => {
     onSuccess: (_, variables) => {
       invalidatePostLists(queryClient);
       queryClient.invalidateQueries({ queryKey: postKeys.detail(variables.id) });
+      toastAction.updated("Changes saved.");
     },
     onError: (error: unknown) => {
-      console.error(error);
+      toastError(parseAxiosError(error));
     },
   });
 
   const onSubmit = (id: string, data: PostForm) => {
-    mutation.mutate({ id, data });
+    return mutation.mutateAsync({ id, data });
   };
 
   return {
     register: form.register,
     handleSubmit: form.handleSubmit,
+    setValue: form.setValue,
     formState: form.formState,
     onSubmit,
     isLoading: mutation.isPending,
@@ -166,10 +171,14 @@ export const useDeletePost = () => {
     mutationFn: deletePost,
     onSuccess: () => {
       invalidatePostLists(queryClient);
+      toastAction.deleted("Post deleted.");
+    },
+    onError: (error: unknown) => {
+      toastError(parseAxiosError(error));
     },
   });
 
-  const onDelete = (id: string) => mutation.mutate(id);
+  const onDelete = (id: string) => mutation.mutateAsync(id);
 
   return {
     onDelete,
@@ -187,9 +196,12 @@ export const useToggleLike = () => {
       invalidatePostLists(queryClient);
       queryClient.invalidateQueries({ queryKey: postKeys.detail(postId) });
     },
+    onError: (error: unknown) => {
+      toastError(parseAxiosError(error));
+    },
   });
 
-  const toggleLike = (postId: string) => mutation.mutate(postId);
+  const toggleLike = (postId: string) => mutation.mutateAsync(postId);
 
   return {
     toggleLike,
@@ -214,11 +226,15 @@ export const useCreateComment = (postId: string) => {
       queryClient.invalidateQueries({ queryKey: postKeys.detail(postId) });
       invalidatePostLists(queryClient);
       form.reset();
+      toastAction.submitted("Comment posted.");
+    },
+    onError: (error: unknown) => {
+      toastError(parseAxiosError(error));
     },
   });
 
   const onSubmit = (data: CommentForm) => {
-    mutation.mutate(data);
+    return mutation.mutateAsync(data);
   };
 
   return {
@@ -240,11 +256,15 @@ export const useDeleteComment = (postId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: postKeys.detail(postId) });
       invalidatePostLists(queryClient);
+      toastAction.deleted("Comment deleted.");
+    },
+    onError: (error: unknown) => {
+      toastError(parseAxiosError(error));
     },
   });
 
   const onDeleteComment = (commentId: string) => {
-    mutation.mutate({ commentId });
+    return mutation.mutateAsync({ commentId });
   };
 
   return {

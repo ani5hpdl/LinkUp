@@ -7,14 +7,12 @@
  * - useToggleFollow: Toggles the follow state and refreshes cached profile data.
  */
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   getFollowers,
   getFollowings,
   getProfile,
-  toggleFollow,
 } from "../api/users.api";
-import { parseAxiosError } from "../lib/parseAxiosError";
 
 export const followKeys = {
   all: ["follow"] as const,
@@ -37,6 +35,7 @@ export const useFollowers = (username: string) => {
     queryKey: followKeys.followers(username),
     queryFn: ({ pageParam = 1 }: { pageParam?: number }) => getFollowers(username, pageParam),
     initialPageParam: 1,
+    enabled: !!username,
     getNextPageParam: (lastPage, allPages) => {
       const pageSize = lastPage.data?.length ?? 0;
       const total = lastPage.count ?? 0;
@@ -55,6 +54,7 @@ export const useFollowings = (username: string) => {
     queryKey: followKeys.followings(username),
     queryFn: ({ pageParam = 1 }: { pageParam?: number }) => getFollowings(username, pageParam),
     initialPageParam: 1,
+    enabled: !!username,
     getNextPageParam: (lastPage, allPages) => {
       const pageSize = lastPage.data?.length ?? 0;
       const total = lastPage.count ?? 0;
@@ -68,25 +68,11 @@ export const useFollowings = (username: string) => {
   });
 };
 
-export const useToggleFollow = (username: string) => {
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationFn: () => toggleFollow(username),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: followKeys.profile(username) });
-      queryClient.invalidateQueries({ queryKey: followKeys.followers(username) });
-      queryClient.invalidateQueries({ queryKey: followKeys.followings(username) });
-    },
-  });
-
-  const onToggleFollow = () => {
-    mutation.mutate();
-  };
-
+export const useToggleFollow = (_username: string) => {
   return {
-    onToggleFollow,
-    isLoading: mutation.isPending,
-    error: parseAxiosError(mutation.error),
+    onToggleFollow: () => {},
+    isLoading: false,
+    isSupported: false,
+    error: null,
   };
 };

@@ -1,1 +1,0 @@
-// # Defines the shape and provides the context for Auth state.

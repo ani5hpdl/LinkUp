@@ -3,8 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import z from "zod";
-import { getMe, loginUser, logOut, registerUser } from "../api/auth.api";
+import { getMe, loginUser, logOut, registerUser, updateMe } from "../api/auth.api";
 import { parseAxiosError } from "../lib/parseAxiosError";
+import { toastAction, toastError } from "../lib/toast";
 
 /**
  * USE AUTH HOOK
@@ -40,12 +41,13 @@ export const useLogin = () => {
 
   const mutation = useMutation({
     mutationFn: loginUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    onSuccess: (user) => {
+      queryClient.setQueryData(["authUser"], user);
+      toastAction.welcomeBack("Welcome back. You are signed in.");
       navigate("/");
     },
     onError: (error: unknown) => {
-      console.error(error);
+      toastError(parseAxiosError(error));
     },
   });
 
@@ -107,12 +109,13 @@ export const useRegister = () => {
 
   const mutation = useMutation({
     mutationFn: registerUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["authUser"] });
+    onSuccess: (user) => {
+      queryClient.setQueryData(["authUser"], user);
+      toastAction.accountCreated("Account created. Welcome to LinkUp.");
       navigate("/");
     },
     onError: (error: unknown) => {
-      console.error(error);
+      toastError(parseAxiosError(error));
     },
   });
 
@@ -155,13 +158,67 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: logOut,
     onSuccess: () => {
+      toastAction.signedOut("You have been signed out.");
       queryClient.clear();
       navigate("/login");
     },
     onError: () => {
       sessionStorage.removeItem("refreshToken");
+      toastAction.signedOut("You have been signed out.");
       queryClient.clear();
       navigate("/login");
     }
   });
+};
+
+const updateProfileSchema = z.object({
+  displayName: z.string().min(1, "Display name is required").max(60, "Max 60 characters"),
+  bio: z.string().max(160, "Bio must be 160 characters or less").optional().or(z.literal("")),
+  avatar_url: z.string().url("Enter a valid image URL").optional().or(z.literal("")),
+});
+
+type UpdateProfileForm = z.infer<typeof updateProfileSchema>;
+
+export const useUpdateMe = (defaultValues?: Partial<UpdateProfileForm>) => {
+  const queryClient = useQueryClient();
+
+  const form = useForm<UpdateProfileForm>({
+    resolver: zodResolver(updateProfileSchema),
+    defaultValues: {
+      displayName: defaultValues?.displayName ?? "",
+      bio: defaultValues?.bio ?? "",
+      avatar_url: defaultValues?.avatar_url ?? "",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: updateMe,
+    onSuccess: (user) => {
+      queryClient.setQueryData(["authUser"], user);
+      toastAction.updated("Profile updated.");
+    },
+    onError: (error: unknown) => {
+      toastError(parseAxiosError(error));
+    },
+  });
+
+  const onSubmit = (data: UpdateProfileForm) => {
+    const payload = {
+      displayName: data.displayName,
+      bio: data.bio || undefined,
+      avatar_url: data.avatar_url || undefined,
+    };
+
+    return mutation.mutateAsync(payload);
+  };
+
+  return {
+    register: form.register,
+    handleSubmit: form.handleSubmit,
+    setValue: form.setValue,
+    formState: form.formState,
+    onSubmit,
+    isLoading: mutation.isPending,
+    error: parseAxiosError(mutation.error),
+  };
 };
