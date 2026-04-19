@@ -1,7 +1,7 @@
 # LinkUp (client + API)
 
 Full-stack social network with a React + Vite frontend and an Express + PostgreSQL backend secured with JWTs and httpOnly cookies.  
-**Last updated:** 2026-04-12 (Asia/Kathmandu, UTC+05:45).
+**Last updated:** $(date '+%Y-%m-%d') (UTC).
 
 ## Features at a glance
 - Auth: register, login, refresh, logout, me, update profile; rate limits on sensitive routes.
@@ -9,10 +9,10 @@ Full-stack social network with a React + Vite frontend and an Express + PostgreS
 - Posts: create/edit/delete, per-post likes and comments, personal feed and global explore.
 - Post detail view: `/post/:id` page shows the post, live like count, comment thread, and a modal listing users who liked it.
 - UX: landing page plus login/signup screens styled with Tailwind CSS v4 and shadcn-inspired components.
-- Observability and safety: Helmet, CORS allowlist via `CLIENT_URL`, rate limiting, request IDs, compression, access/error logs via morgan -> Winston.
+- Notifications: realtime bell with unread count, dedicated page with infinite scroll, mark individual/all read (API mounted at /api/v1/notification).
 
 ## Tech stack
-- **Frontend:** React 19, Vite, TypeScript, React Router v7, React Query, Tailwind CSS v4, shadcn UI primitives, Lucide icons.
+- **Frontend:** React 19, Vite, TypeScript, React Router v7, TanStack Query (React Query), Tailwind CSS v4, shadcn-inspired UI primitives, Lucide React icons, custom hooks (useFollow, useNotifications, useInfiniteScroll, useSearch).
 - **Backend:** Node.js (TypeScript), Express 5, PostgreSQL with Prisma 7 (`@prisma/adapter-pg`), JWT auth stored in cookies.
 
 ## Prerequisites
@@ -69,7 +69,7 @@ Base URL: `/api/v1`
 - `GET /post/explore` - paginated global timeline.
 
 **Users**  
-Routes are implemented in `src/modules/users` but **not yet mounted** in `src/routes/index.ts`. Add `router.use("/users", usersRoutes);` to expose:
+Follow/unfollow client hooks/components ready (useFollow.ts, FollowButton.jsx). Server routes implemented but **not yet mounted** in `src/routes/index.ts` (`router.use("/users", usersRoutes);` needed for /users/:username, /users/search, follow endpoints).
 - `GET /users/:username`
 - `GET /users/:username/followers` and `/following`
 - `POST /users/:username/follow`
@@ -88,7 +88,7 @@ Routes are implemented in `src/modules/users` but **not yet mounted** in `src/ro
 
 ## Notes / gaps
 - User routes exist but are not mounted; wire them in before shipping follow features.
-- No endpoint yet to mark notifications read; notifications are created on likes/comments only.
+- Follow endpoints pending server route mounting.
 - Tests are not present (`npm test` is a stub); add coverage before production.
 - Rotate real secrets in `.env` and commit only sample values.
 
