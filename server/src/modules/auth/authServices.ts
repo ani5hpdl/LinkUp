@@ -1,9 +1,11 @@
 import { prisma } from "../../config/db.js";
 import { ApiError } from "../../utils/apiError.js";
 import bcrypt from "bcrypt";
-import type { LoginData, RegisterData } from "./authValidator.js";
+import type { LoginData, RegisterData, UpdateMeData } from "./authValidator.js";
 import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
 import { StatusCodes } from "http-status-codes";
+import type { IUser } from "../../types/index.js";
+import jwt from "jsonwebtoken";
 
 export const register = async (data: RegisterData) => {
   const { username, email, password, displayName } = data;
@@ -73,4 +75,48 @@ export const login = async (data: LoginData) => {
     accessToken,
     refreshToken,
   };
+};
+
+export const refresh = async (token: string) => {
+  if (!token) throw new ApiError(StatusCodes.BAD_REQUEST, "No Token");
+
+  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as IUser;
+
+  const user = await prisma.user.findUnique({
+    where: { id: decoded.id },
+  });
+
+  if (!user) throw new ApiError(StatusCodes.NOT_FOUND, "User Not Found");
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = generateRefreshToken(user);
+
+  return accessToken;
+};
+
+export const updateMe = async (userId: string, data: UpdateMeData) => {
+  const dataToUpdate: {
+    displayName?: string;
+    bio?: string;
+    avatar_url?: string;
+  } = {};
+
+  if (data.displayName !== undefined) {
+    dataToUpdate.displayName = data.displayName;
+  }
+
+  if (data.bio !== undefined) {
+    dataToUpdate.bio = data.bio;
+  }
+
+  if (data.avatar_url !== undefined) {
+    dataToUpdate.avatar_url = data.avatar_url;
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: dataToUpdate,
+  });
+
+  return updatedUser;
 };
