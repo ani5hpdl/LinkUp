@@ -79,9 +79,13 @@ export const login = async (data: LoginData) => {
 
 export const refresh = async (token: string) => {
   if (!token) throw new ApiError(StatusCodes.BAD_REQUEST, "No Token");
+  let decoded: IUser;
 
-  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as IUser;
-
+  try {
+    decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as IUser;
+  } catch {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid or expired token");
+  }
   const user = await prisma.user.findUnique({
     where: { id: decoded.id },
   });
@@ -91,7 +95,10 @@ export const refresh = async (token: string) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  return accessToken;
+  return {
+    accessToken,
+    refreshToken,
+  };
 };
 
 export const updateMe = async (userId: string, data: UpdateMeData) => {
@@ -113,9 +120,21 @@ export const updateMe = async (userId: string, data: UpdateMeData) => {
     dataToUpdate.avatar_url = data.avatar_url;
   }
 
+  if (Object.keys(dataToUpdate).length === 0) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "No fields to update");
+  }
+
   const updatedUser = await prisma.user.update({
     where: { id: userId },
     data: dataToUpdate,
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      displayName: true,
+      bio: true,
+      avatarUrl: true,
+    }
   });
 
   return updatedUser;
